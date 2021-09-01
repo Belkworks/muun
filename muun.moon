@@ -5,11 +5,22 @@
 -- License: MIT. See LICENSE for details
 -----------------------------------------------------------------]]
 
+wrap = (any, key) ->
+	return any unless (type any) == 'function'
+	(...) =>
+		cur = @__fn
+		@__fn = key
+		r = { any @, ... }
+		@__fn = cur
+		unpack r
+
 setup = (__name, __parent, __base) ->
 	mt =
 		__call: (...) =>
 			obj = setmetatable({}, __base)
+			@.__fn = 'new'
 			@.__init(obj, ...)
+			@.__fn = nil
 			obj
 		__index: __base
 		__newindex: (key, value) => __base[key] = value
@@ -25,6 +36,13 @@ setup = (__name, __parent, __base) ->
 
 	with __base
 		.__class, .__index = cls, __base
+
+	old = __base.__index
+	__base.__index = (K) =>
+		if K == 'super'
+			__parent[assert @__fn, 'couldnt find super!']
+		else wrap old[K], K
+
 	cls
 
 super = (parent) ->
