@@ -4,12 +4,29 @@ local _ = [[-----------------------------------------------------------------
 -- Copyright 2019, 2021 megagrump@pm.me
 -- License: MIT. See LICENSE for details
 -----------------------------------------------------------------]]
+local wrap
+wrap = function(any, key)
+  if not ((type(any)) == 'function') then
+    return any
+  end
+  return function(self, ...)
+    local cur = self.__fn
+    self.__fn = key
+    local r = {
+      any(self, ...)
+    }
+    self.__fn = cur
+    return unpack(r)
+  end
+end
 local setup
 setup = function(__name, __parent, __base)
   local mt = {
     __call = function(self, ...)
       local obj = setmetatable({ }, __base)
+      self.__fn = 'new'
       self.__init(obj, ...)
+      self.__fn = nil
       return obj
     end,
     __index = __base,
@@ -28,6 +45,14 @@ setup = function(__name, __parent, __base)
   }, mt)
   do
     __base.__class, __base.__index = cls, __base
+  end
+  local old = __base.__index
+  __base.__index = function(self, K)
+    if K == 'super' then
+      return __parent[assert(self.__fn, 'couldnt find super!')]
+    else
+      return wrap(old[K], K)
+    end
   end
   return cls
 end
