@@ -14,7 +14,7 @@ local ExtendedClass = class('ExtendedClass', MoonScriptClass)
 
  -- override constructor
 function ExtendedClass:new(x, y)	
-	ExtendedClass.__super(self) -- calls MoonScriptClass constructor
+	self:super() -- calls MoonScriptClass constructor
 
 	self.x, self.y = x, y
 	print("Hi! My position is:", x, y)
@@ -107,7 +107,7 @@ local instance = MyClass(23, 42)
 ```
 ---
 ### Inheritance
-All derived classes have a `__super` table that acts as a proxy for the base class. **Note**: `__super` is not an alias for the base class as in MoonScript, it's merely a proxy that allows you to access the base class.
+All derived classes have a `super` method that can call the current function upwards.
 
 If a class implements the `__inherited` method, it gets called whenever another class extends this class.
 ```lua
@@ -128,12 +128,12 @@ end
 local Derived = class('Derived', Base)
 
 function Derived:new(...)
-    Derived.__super(self, ...)
+    self:super(...)
     print("Hi from Derived!")
 end
 
 function Derived:foo()
-    Derived.__super.foo(self)
+    self:super()
     print("Bar!")
 end
 
